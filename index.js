@@ -27,15 +27,26 @@ async function run() {
     const database = client.db("grant-genius");
     const bannerCollection = database.collection("banner");
     const userCollection = database.collection("user");
+    const scholarshipCollection = database.collection("scholarship");
 
     app.get('/banner',async(req,res)=>{
         const result = await bannerCollection.find().toArray()
         res.send(result)
     })
+    app.get('/all-scholarship',async(req,res)=>{
+        const result =await scholarshipCollection.find().toArray()
+        res.send(result)
+    })
 
     app.post('/user',async(req,res)=>{
         const userInfo =req.body
-        const result = await 
+        const query ={email: userInfo.email}
+        const existUser =await userCollection.findOne(query)
+        if(existUser){
+          return res.send({message:'already exist',insertId: null})
+        }
+        const result = await userCollection.insertOne(userInfo)
+        res.send(result)
     })
 
 
