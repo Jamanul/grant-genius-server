@@ -24,6 +24,22 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+    const database = client.db("grant-genius");
+    const bannerCollection = database.collection("banner");
+    const userCollection = database.collection("user");
+
+    app.get('/banner',async(req,res)=>{
+        const result = await bannerCollection.find().toArray()
+        res.send(result)
+    })
+
+    app.post('/user',async(req,res)=>{
+        const userInfo =req.body
+        const result = await 
+    })
+
+
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -33,11 +49,6 @@ async function run() {
   }
 }
 run().catch(console.dir);
-
-
-
-
-
 
 
 
