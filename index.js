@@ -6,6 +6,7 @@ const cors = require("cors");
 require('dotenv').config()
 app.use(cors())
 app.use(express.json())
+const jwt = require('jsonwebtoken')
 
 
 
@@ -28,6 +29,13 @@ async function run() {
     const bannerCollection = database.collection("banner");
     const userCollection = database.collection("user");
     const scholarshipCollection = database.collection("scholarship");
+
+    //jwt related api
+    app.post('/jwt',async (req,res)=>{
+        const userInfo =req.body;
+        const token =jwt.sign(userInfo,process.env.DB_ACCESS_TOKEN,{expiresIn: '1h'})
+        res.send({token})
+    })
 
     app.get('/banner',async(req,res)=>{
         const result = await bannerCollection.find().toArray()
