@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require("express");
 const app = express();
 const port = process.env.PORT || 5000;
@@ -36,6 +36,20 @@ async function run() {
         const token =jwt.sign(userInfo,process.env.DB_ACCESS_TOKEN,{expiresIn: '1h'})
         res.send({token})
     })
+    //token verification
+    const verifyToken = (req,res,next)=>{
+        if(!req.headers.authorization){
+            return res.status(401).send({message: 'unauthorized access'})
+        }
+        const token = req.headers.authorization.split(' ')[1]
+        jwt.verify(token,process.env.DB_ACCESS_TOKEN,(err,decoded)=>{
+            if(err){
+                return res.status(401).send({message: 'unauthorized access'})
+            }
+            req.decoded=decoded
+            next()
+        })
+    }
 
     app.get('/banner',async(req,res)=>{
         const result = await bannerCollection.find().toArray()
@@ -45,7 +59,13 @@ async function run() {
         const result =await scholarshipCollection.find().toArray()
         res.send(result)
     })
-
+    app.get('/scholarship/:id',verifyToken,async(req,res)=>{
+        const id = req.params.id;
+        //console.log({id})
+        const query ={_id: new ObjectId(id)}
+        const result = await scholarshipCollection.findOne(query)
+        res.send(result)
+    })
     app.post('/user',async(req,res)=>{
         const userInfo =req.body
         const query ={email: userInfo.email}
