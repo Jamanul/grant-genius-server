@@ -7,6 +7,7 @@ require("dotenv").config();
 app.use(cors());
 app.use(express.json());
 const jwt = require("jsonwebtoken");
+const stripe = require('stripe')(process.env.DB_STRIPE_KEY)
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.dibths0.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -37,19 +38,19 @@ async function run() {
       res.send({ token });
     });
     //token verification
-    const verifyToken = (req, res, next) => {
-      if (!req.headers.authorization) {
-        return res.status(401).send({ message: "unauthorized access" });
+    const verifyToken=(req,res,next)=>{
+      if(!req.headers.authorization){
+        return res.status(401).send({message: 'unauthorized access'})
       }
-      const token = req.headers.authorization.split(" ")[1];
-      jwt.verify(token, process.env.DB_ACCESS_TOKEN, (err, decoded) => {
-        if (err) {
-          return res.status(401).send({ message: "unauthorized access" });
+      const token = req.headers.authorization.split(' ')[1]
+      jwt.verify(token, process.env.DB_ACCESS_TOKEN,(err, decoded)=>{
+        if(err){
+          return res.status(401).send({message: 'unauthorized access'})
         }
-        req.decoded = decoded;
-        next();
-      });
-    };
+        req.decoded=decoded
+        next()
+      })
+    }
 
     app.get("/banner", async (req, res) => {
       const result = await bannerCollection.find().toArray();
@@ -77,6 +78,19 @@ async function run() {
       const result = await userCollection.insertOne(userInfo);
       res.send(result);
     });
+    app.post('/create-payment-intent',async(req,res)=>{
+      const {price}=req.body
+      const amount = parseInt(price * 100)
+      console.log(price)
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card']
+      })
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
