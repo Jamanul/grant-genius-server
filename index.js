@@ -28,6 +28,7 @@ async function run() {
     const bannerCollection = database.collection("banner");
     const userCollection = database.collection("user");
     const scholarshipCollection = database.collection("scholarship");
+    const appliedScholarshipCollection = database.collection("applied-test-scholarship");
 
     //jwt related api
     app.post("/jwt", async (req, res) => {
@@ -52,6 +53,30 @@ async function run() {
       })
     }
 
+    app.post('/applied-scholarship',async(req,res)=>{
+        const appliedScholarship = req.body;
+        const result = await appliedScholarshipCollection.insertOne(appliedScholarship)
+        res.send(result)
+    })
+    app.get('/applied-scholarships',async(req,res)=>{
+      let query ={}
+      console.log(req.query.email)
+      if(req.query?.email){
+        query ={userEmail: req.query.email}
+      }
+      console.log(query)
+      //console.log('hitting')
+      const cursor = appliedScholarshipCollection.find(query)
+      const result = await cursor.toArray()
+      res.send(result) 
+    })
+    app.delete('/applied-scholarship-delete/:id',async(req,res)=>{
+      const id= req.params.id
+      const query = { _id: new ObjectId(id) }
+      const result = await appliedScholarshipCollection.deleteOne(query)
+      res.send(result)
+    })
+
     app.get("/banner", async (req, res) => {
       const result = await bannerCollection.find().toArray();
       res.send(result);
@@ -64,7 +89,9 @@ async function run() {
     app.get("/all-scholarship/:id", async (req, res) => {
         const id = req.params.id
         console.log({id})
-        const query = { _id: new ObjectId(id) }
+        const newId = parseInt(id)
+        const query = { scholarshipId: newId }
+        console.log(query)
         const result = await scholarshipCollection.findOne(query)
         res.send(result)
       });
