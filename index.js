@@ -76,7 +76,42 @@ async function run() {
       const result = await appliedScholarshipCollection.deleteOne(query)
       res.send(result)
     })
-
+    app.get("/applied-scholarship/:id", async (req, res) => {
+      const id = req.params.id
+      console.log({id})
+      const query = { _id: new ObjectId(id) }
+      console.log(query)
+      const result = await appliedScholarshipCollection.findOne(query)
+      res.send(result)
+    });
+    app.patch('/applied-scholarship/:id',async (req,res)=>{
+      const scholarshipData = req.body
+      const id =req.params.id
+      const filter ={_id: new ObjectId(id)}
+      const updateDoc ={
+        $set: {
+        universityLocation : scholarshipData.universityLocation,
+        applicationFees : scholarshipData.applicationFees,
+        serviceCharge : scholarshipData.serviceCharge,
+        applicantName : scholarshipData.applicantName,
+        userId : scholarshipData.userId,
+        userEmail : scholarshipData.userEmail,
+        phoneNumber : scholarshipData.phoneNumber,
+        photo : scholarshipData.photo,
+        address : scholarshipData.address,
+        gender : scholarshipData.gender,
+        degree : scholarshipData.degree,
+        sscResult : scholarshipData.sscResult,
+        hscResult : scholarshipData.hscResult,
+        studyGap : scholarshipData.studyGap,
+        universityName : scholarshipData.universityName,
+        scholarshipCategory : scholarshipData.scholarshipCategory,
+        subjectName : scholarshipData.subjectName
+        }
+      }
+      const result = await appliedScholarshipCollection.updateOne(filter,updateDoc)
+      res.send(result)
+    })
     app.get("/banner", async (req, res) => {
       const result = await bannerCollection.find().toArray();
       res.send(result);
