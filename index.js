@@ -158,6 +158,32 @@ async function run() {
       const result = await reviewCollection.deleteOne(query)
       res.send(result)
     })
+    app.get("/single-review/:id",async(req,res)=>{
+      const id =req.params.id
+      const query ={_id: new ObjectId(id)}
+      const result = await reviewCollection.findOne(query)
+      res.send(result)
+    })
+    app.patch("/edit-review/:id",async(req,res)=>{
+      const id = req.params.id
+      const reviewData =req.body
+      const filter ={_id: new ObjectId(id)}
+      console.log('test',filter)
+      const updateDoc ={
+        $set: {
+          userName: reviewData.userName,
+          userImg: reviewData.userImg,
+          email: reviewData.email,
+          review: reviewData.review,
+          rating: reviewData.rating,
+          universityName: reviewData.universityName,
+          scholarshipName: reviewData.scholarshipName,
+          scholarshipId: reviewData.scholarshipId
+        }
+      }
+      const result = await reviewCollection.updateOne(filter,updateDoc)
+      res.send(result)
+    })
     app.post('/create-payment-intent',async(req,res)=>{
       const {price}=req.body
       const amount = parseInt(price * 100)
