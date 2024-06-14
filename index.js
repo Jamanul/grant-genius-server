@@ -32,28 +32,52 @@ async function run() {
     const reviewCollection = database.collection("review");
 
     //jwt related api
-    app.post("/jwt", async (req, res) => {
-      const userInfo = req.body;
-      const token = jwt.sign(userInfo, process.env.DB_ACCESS_TOKEN, {
-        expiresIn: "1h",
-      });
-      res.send({ token });
-    });
+    app.post('/jwt',async(req,res)=>{
+      const user = req.body
+      const token = jwt.sign(user,process.env.DB_ACCESS_TOKENS,{expiresIn: '1h'})
+      res.send({token})
+    })
+
     //token verification
     const verifyToken=(req,res,next)=>{
       if(!req.headers.authorization){
+        console.log('err in 1st verify token')
         return res.status(401).send({message: 'unauthorized access'})
       }
       const token = req.headers.authorization.split(' ')[1]
-      jwt.verify(token, process.env.DB_ACCESS_TOKEN,(err, decoded)=>{
+      jwt.verify(token, process.env.DB_ACCESS_TOKENS,(err, decoded)=>{
         if(err){
+          console.log('err in verify token')
           return res.status(401).send({message: 'unauthorized access'})
         }
         req.decoded=decoded
         next()
       })
     }
-
+    const verifyAdmin =async(req,res,next)=>{
+      const email =req.decoded.email
+      console.log('email in verify admin',email)
+      const query ={email: email}
+      const user = await userCollection.findOne(query)
+      const isAdmin = user?.role === 'admin'
+      if(!isAdmin){
+        return res.status(403).send({message: 'forbidden access'})
+      }
+      next()
+    }
+    app.get('/user/admin/:email',verifyToken,async(req,res)=>{
+      const email =req.params.email
+      if(email !==req.decoded.email){
+        return res.status(403).send({message: 'forbidden access'})
+      }
+      const query= {email: email}
+      const user = await userCollection.findOne(query)
+      let admin =false
+      if(user){
+        admin = user?.role === 'admin'
+      }
+      res.send({admin})
+  })
     app.post('/applied-scholarship',async(req,res)=>{
         const appliedScholarship = req.body;
         const result = await appliedScholarshipCollection.insertOne(appliedScholarship)
@@ -141,6 +165,29 @@ async function run() {
       const result = await userCollection.insertOne(userInfo);
       res.send(result);
     });
+    app.get("/users",verifyToken,verifyAdmin,async(req,res)=>{
+      const result =await userCollection.find().toArray()
+      res.send(result)
+    })
+    app.delete("/user/:id",verifyToken,verifyAdmin,async(req,res)=>{
+      const id =req.params.id
+      const filter = {_id : new ObjectId(id)}
+      const result = await userCollection.deleteOne(filter)
+      res.send(result)
+    })
+    app.patch("/user-role/:id",verifyToken,verifyAdmin,async (req,res)=>{
+      const userRole =req.body
+      console.log(userRole)
+      const id =req.params.id
+      const filter = {_id : new ObjectId(id)}
+      const updateDoc ={
+        $set :{
+          role: userRole.role
+        }
+      }
+      const result = await userCollection.updateOne(filter,updateDoc)
+      res.send(result)
+    })
     app.post("/review",async(req,res)=>{
       const reviewData =req.body
       const result = await reviewCollection.insertOne(reviewData)
