@@ -27,7 +27,7 @@ async function run() {
     const database = client.db("grant-genius");
     const bannerCollection = database.collection("banner");
     const userCollection = database.collection("user");
-    const scholarshipCollection = database.collection("scholarship");
+    const scholarshipCollection = database.collection("new-scholarship");
     const appliedScholarshipCollection = database.collection("applied-test-scholarship");
     const reviewCollection = database.collection("review");
 
@@ -65,6 +65,17 @@ async function run() {
       }
       next()
     }
+    const verifyModerator =async(req,res,next)=>{
+      const email =req.decoded.email
+      //console.log('email in verify moderator',email)
+      const query ={email: email}
+      const user = await userCollection.findOne(query)
+      const isModerator = user?.role === 'moderator'
+      if(!isModerator){
+        return res.status(403).send({message: 'forbidden access'})
+      }
+      next()
+    }
     app.get('/user/admin/:email',verifyToken,async(req,res)=>{
       const email =req.params.email
       if(email !==req.decoded.email){
@@ -77,6 +88,22 @@ async function run() {
         admin = user?.role === 'admin'
       }
       res.send({admin})
+  })
+    app.get('/user/moderator/:email',verifyToken,async(req,res)=>{
+      const email =req.params.email
+      //console.log('moderator')
+      if(email !==req.decoded.email){
+        return res.status(403).send({message: 'forbidden access'})
+      }
+      const query= {email: email}
+      const user = await userCollection.findOne(query)
+      //console.log(user.role, '100')
+      let moderator =false
+      if(user){
+        moderator = user?.role === 'moderator'
+      }
+      //console.log(moderator)
+      res.send({moderator})
   })
     app.post('/applied-scholarship',async(req,res)=>{
         const appliedScholarship = req.body;
@@ -155,6 +182,14 @@ async function run() {
         const result = await scholarshipCollection.findOne(query)
         res.send(result)
       });
+    app.get("/all-scholarships/:id", async (req, res) => {
+        const id = req.params.id
+       
+        const query = { _id: new ObjectId(id) }
+        console.log(query)
+        const result = await scholarshipCollection.findOne(query)
+        res.send(result)
+      });
     app.post("/user", async (req, res) => {
       const userInfo = req.body;
       const query = { email: userInfo.email };
@@ -173,6 +208,12 @@ async function run() {
       const id =req.params.id
       const filter = {_id : new ObjectId(id)}
       const result = await userCollection.deleteOne(filter)
+      res.send(result)
+    })
+    app.delete("/all-scholarship-delete/:id",verifyToken,verifyModerator,async(req,res)=>{
+      const id =req.params.id
+      const filter = {_id : new ObjectId(id)}
+      const result = await scholarshipCollection.deleteOne(filter)
       res.send(result)
     })
     app.patch("/user-role/:id",verifyToken,verifyAdmin,async (req,res)=>{
@@ -215,7 +256,7 @@ async function run() {
       const id = req.params.id
       const reviewData =req.body
       const filter ={_id: new ObjectId(id)}
-      console.log('test',filter)
+      //console.log('test',filter)
       const updateDoc ={
         $set: {
           userName: reviewData.userName,
@@ -229,6 +270,31 @@ async function run() {
         }
       }
       const result = await reviewCollection.updateOne(filter,updateDoc)
+      res.send(result)
+    })
+    app.patch("/all-scholarship/:id",async(req,res)=>{
+      const id = req.params.id
+      const scholarshipData =req.body
+      const filter ={_id: new ObjectId(id)}
+      console.log('test',filter)
+      const updateDoc ={
+        $set: {
+          universityName: scholarshipData.universityName,
+          scholarshipCategory: scholarshipData.scholarshipCategory,
+          stipend: scholarshipData.stipend,
+          universityLogo: scholarshipData.universityLogo,
+          scholarshipName: scholarshipData.scholarshipName,
+          scholarshipDescription: scholarshipData.scholarshipDescription,
+          serviceCharge: scholarshipData.serviceCharge,
+          applicationFees: scholarshipData.applicationFees,
+          applicationDeadline: scholarshipData.applicationDeadline,
+          universityLocation :{
+            city: scholarshipData.universityLocation.city,
+            country: scholarshipData.universityLocation.country,
+          }
+        }
+      }
+      const result = await scholarshipCollection.updateOne(filter,updateDoc)
       res.send(result)
     })
     app.post('/create-payment-intent',async(req,res)=>{
