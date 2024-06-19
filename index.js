@@ -126,6 +126,10 @@ async function run() {
       const result = await appliedScholarshipCollection.updateOne(filter,updateDoc)
       res.send(result)
     })
+    app.get('/all-reviews',verifyToken,verifyModerator,async(req,res)=>{
+      const result = await reviewCollection.find().toArray()
+      res.send(result)
+    })
     app.patch('/applied-application-status/:id',verifyToken,verifyModerator,async(req,res)=>{
       const id = req.params.id
       const filter = {_id : new ObjectId(id)}
@@ -155,6 +159,12 @@ async function run() {
       const id= req.params.id
       const query = { _id: new ObjectId(id) }
       const result = await appliedScholarshipCollection.deleteOne(query)
+      res.send(result)
+    })
+    app.delete('/review-delete/:id',verifyToken,verifyModerator,async(req,res)=>{
+      const id = req.params.id
+      const query ={_id: new ObjectId(id)}
+      const result = await reviewCollection.deleteOne(query)
       res.send(result)
     })
     app.get("/applied-scholarship/:id", async (req, res) => {
