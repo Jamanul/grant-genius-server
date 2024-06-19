@@ -210,6 +210,11 @@ async function run() {
       const result = await userCollection.deleteOne(filter)
       res.send(result)
     })
+    app.post('/all-scholarship',verifyToken,verifyModerator,async(req,res)=>{
+        const scholarshipData= req.body
+        const result = await scholarshipCollection.insertOne(scholarshipData)
+        res.send(result)
+    })
     app.delete("/all-scholarship-delete/:id",verifyToken,verifyModerator,async(req,res)=>{
       const id =req.params.id
       const filter = {_id : new ObjectId(id)}
