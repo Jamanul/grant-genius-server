@@ -110,6 +110,35 @@ async function run() {
         const result = await appliedScholarshipCollection.insertOne(appliedScholarship)
         res.send(result)
     })
+    app.get('/all-applied-scholarship',verifyToken,verifyModerator,async(req,res)=>{
+      const result = await appliedScholarshipCollection.find().toArray()
+      res.send(result)
+    })
+    app.patch('/applied-application-feedback/:id',verifyToken,verifyModerator,async(req,res)=>{
+      const id = req.params.id
+      const filter = {_id : new ObjectId(id)}
+      const feedbackData =req.body
+      const updateDoc ={
+        $set: {
+          feedback : feedbackData.feedback
+        }
+      }
+      const result = await appliedScholarshipCollection.updateOne(filter,updateDoc)
+      res.send(result)
+    })
+    app.patch('/applied-application-status/:id',verifyToken,verifyModerator,async(req,res)=>{
+      const id = req.params.id
+      const filter = {_id : new ObjectId(id)}
+      const statusData =req.body
+      console.log()
+      const updateDoc ={
+        $set: {
+          status : statusData.status
+        }
+      }
+      const result = await appliedScholarshipCollection.updateOne(filter,updateDoc)
+      res.send(result)
+    })
     app.get('/applied-scholarships',async(req,res)=>{
       let query ={}
       console.log(req.query.email)
