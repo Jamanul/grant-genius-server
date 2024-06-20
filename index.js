@@ -126,7 +126,7 @@ async function run() {
       const result = await appliedScholarshipCollection.updateOne(filter,updateDoc)
       res.send(result)
     })
-    app.get('/all-reviews',verifyToken,verifyModerator,async(req,res)=>{
+    app.get('/all-reviews',async(req,res)=>{
       const result = await reviewCollection.find().toArray()
       res.send(result)
     })
@@ -165,6 +165,16 @@ async function run() {
       const id = req.params.id
       const query ={_id: new ObjectId(id)}
       const result = await reviewCollection.deleteOne(query)
+      res.send(result)
+    })
+    app.get('/reviews',async(req,res)=>{
+      let query ={}
+      console.log(parseInt(req.query.scholarshipId))
+      if(req.query?.scholarshipId){
+        query ={scholarshipId: parseInt(req.query.scholarshipId)}
+      }
+      console.log('hello hello',query)
+      const result = await reviewCollection.find(query).toArray()
       res.send(result)
     })
     app.get("/applied-scholarship/:id", async (req, res) => {
