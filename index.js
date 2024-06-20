@@ -114,7 +114,23 @@ async function run() {
       const result = await appliedScholarshipCollection.find().toArray()
       res.send(result)
     })
+    app.get('/all-applied-scholarship-admin',verifyToken,verifyAdmin,async(req,res)=>{
+      const result = await appliedScholarshipCollection.find().toArray()
+      res.send(result)
+    })
     app.patch('/applied-application-feedback/:id',verifyToken,verifyModerator,async(req,res)=>{
+      const id = req.params.id
+      const filter = {_id : new ObjectId(id)}
+      const feedbackData =req.body
+      const updateDoc ={
+        $set: {
+          feedback : feedbackData.feedback
+        }
+      }
+      const result = await appliedScholarshipCollection.updateOne(filter,updateDoc)
+      res.send(result)
+    })
+    app.patch('/applied-application-feedback-admin/:id',verifyToken,verifyAdmin,async(req,res)=>{
       const id = req.params.id
       const filter = {_id : new ObjectId(id)}
       const feedbackData =req.body
@@ -131,6 +147,19 @@ async function run() {
       res.send(result)
     })
     app.patch('/applied-application-status/:id',verifyToken,verifyModerator,async(req,res)=>{
+      const id = req.params.id
+      const filter = {_id : new ObjectId(id)}
+      const statusData =req.body
+      console.log()
+      const updateDoc ={
+        $set: {
+          status : statusData.status
+        }
+      }
+      const result = await appliedScholarshipCollection.updateOne(filter,updateDoc)
+      res.send(result)
+    })
+    app.patch('/applied-application-status-admin/:id',verifyToken,verifyAdmin,async(req,res)=>{
       const id = req.params.id
       const filter = {_id : new ObjectId(id)}
       const statusData =req.body
@@ -288,7 +317,18 @@ async function run() {
         const result = await scholarshipCollection.insertOne(scholarshipData)
         res.send(result)
     })
+    app.post('/all-scholarship-admin',verifyToken,verifyAdmin,async(req,res)=>{
+        const scholarshipData= req.body
+        const result = await scholarshipCollection.insertOne(scholarshipData)
+        res.send(result)
+    })
     app.delete("/all-scholarship-delete/:id",verifyToken,verifyModerator,async(req,res)=>{
+      const id =req.params.id
+      const filter = {_id : new ObjectId(id)}
+      const result = await scholarshipCollection.deleteOne(filter)
+      res.send(result)
+    })
+    app.delete("/all-scholarship-delete-admin/:id",verifyToken,verifyAdmin,async(req,res)=>{
       const id =req.params.id
       const filter = {_id : new ObjectId(id)}
       const result = await scholarshipCollection.deleteOne(filter)
@@ -318,7 +358,13 @@ async function run() {
       const result = await reviewCollection.find(query).toArray()
       res.send(result)
     })
-    app.delete("/review-delete/:id",async(req,res)=>{
+    app.delete("/review-delete/:id",verifyToken,verifyModerator,async(req,res)=>{
+      const id =req.params.id
+      const query={_id : new ObjectId(id)}
+      const result = await reviewCollection.deleteOne(query)
+      res.send(result)
+    })
+    app.delete("/review-delete-admin/:id",verifyToken,verifyAdmin,async(req,res)=>{
       const id =req.params.id
       const query={_id : new ObjectId(id)}
       const result = await reviewCollection.deleteOne(query)
