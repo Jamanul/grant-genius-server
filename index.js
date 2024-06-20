@@ -145,13 +145,37 @@ async function run() {
     })
     app.get('/applied-scholarships',async(req,res)=>{
       let query ={}
-      console.log(req.query.email)
+      //console.log(req.query.email)
       if(req.query?.email){
         query ={userEmail: req.query.email}
       }
       console.log(query)
       //console.log('hitting')
       const cursor = appliedScholarshipCollection.find(query)
+      const result = await cursor.toArray()
+      res.send(result) 
+    })
+    app.get('/user-admin',verifyToken,verifyAdmin,async(req,res)=>{
+      let query ={}
+      //console.log(req.query.email)
+      if(req.query?.email){
+        query ={email: req.query.email}
+      }
+      //console.log(query)
+      //console.log('hitting')
+      const cursor = userCollection.find(query)
+      const result = await cursor.toArray()
+      res.send(result) 
+    })
+    app.get('/user-moderator',verifyToken,verifyModerator,async(req,res)=>{
+      let query ={}
+      //console.log(req.query.email)
+      if(req.query?.email){
+        query ={email: req.query.email}
+      }
+      //console.log(query)
+      //console.log('hitting')
+      const cursor = userCollection.find(query)
       const result = await cursor.toArray()
       res.send(result) 
     })
