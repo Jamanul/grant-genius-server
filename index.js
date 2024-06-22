@@ -4,7 +4,12 @@ const app = express();
 const port = process.env.PORT || 5000;
 const cors = require("cors");
 require("dotenv").config();
-app.use(cors());
+app.use(cors({
+  origin :[
+    'http://localhost:5173',
+    'https://bristo-cafe.web.app'
+  ]
+}));
 app.use(express.json());
 const jwt = require("jsonwebtoken");
 const stripe = require('stripe')(process.env.DB_STRIPE_KEY)
@@ -23,7 +28,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    //await client.connect();
     const database = client.db("grant-genius");
     const bannerCollection = database.collection("banner");
     const userCollection = database.collection("user");
@@ -271,8 +276,34 @@ async function run() {
       res.send(result);
     });
     app.get("/all-scholarship", async (req, res) => {
-      const result = await scholarshipCollection.find().toArray();
+      const filter =req.query
+      const query = {
+        $or: [
+          { universityName: { $regex: filter.search, $options: 'i' } },
+          { appliedDegree: { $regex: filter.search, $options: 'i' } },
+          { scholarshipName: { $regex: filter.search, $options: 'i' } }
+      ]
+      }
+      const options = {
+        sort :{
+          applicationFees : -1
+        }
+      }
+      const result = await scholarshipCollection.find(query,options).toArray();
       console.log("test");
+      console.log(query)
+      console.log(result)
+      res.send(result);
+    });
+    app.get("/all-scholarships", async (req, res) => {
+      const query = { };
+      const options = {
+        sort :{
+          applicationFees : -1
+        }
+      }
+      const result = await scholarshipCollection.find(query,options).toArray();
+      console.log("test 2");
       res.send(result);
     });
     app.get("/all-scholarship/:id", async (req, res) => {
@@ -358,6 +389,16 @@ async function run() {
       const result = await reviewCollection.find(query).toArray()
       res.send(result)
     })
+    app.get("/all-review",async(req,res)=>{
+      const result = await reviewCollection.find().toArray()
+      res.send(result)
+    })
+    app.delete("/review-delete-user/:id",async(req,res)=>{
+      const id =req.params.id
+      const query={_id : new ObjectId(id)}
+      const result = await reviewCollection.deleteOne(query)
+      res.send(result)
+    })
     app.delete("/review-delete/:id",verifyToken,verifyModerator,async(req,res)=>{
       const id =req.params.id
       const query={_id : new ObjectId(id)}
@@ -436,10 +477,10 @@ async function run() {
     })
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
     // Ensures that the client will close when you finish/error
     //await client.close();
